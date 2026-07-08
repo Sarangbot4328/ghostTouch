@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.PixelFormat;
 import android.graphics.drawable.GradientDrawable;
+import android.graphics.drawable.StateListDrawable;
 import android.os.IBinder;
 import android.provider.Settings;
 import android.view.Gravity;
@@ -16,6 +17,9 @@ import android.widget.LinearLayout;
 import android.widget.Toast;
 
 public class GhostOverlayService extends Service {
+    private Button runButton;
+    private Button stopButton;
+    private Button closeButton;
     private WindowManager windowManager;
     private View overlayView;
     private WindowManager.LayoutParams params;
@@ -47,6 +51,7 @@ public class GhostOverlayService extends Service {
         MacroScheduler.stop();
         if (windowManager != null && overlayView != null) {
             windowManager.removeView(overlayView);
+            overlayView = null;
         }
         super.onDestroy();
     }
@@ -68,28 +73,48 @@ public class GhostOverlayService extends Service {
         background.setCornerRadius(dp(8));
         panel.setBackground(background);
 
-        Button settings = overlayButton("설정");
-        Button run = overlayButton("실행");
-        Button stop = overlayButton("중지");
+        Button settingsButton = overlayButton("설정", Color.rgb(44, 58, 68));
+        runButton = overlayButton("실행", Color.rgb(0, 137, 123));
+        stopButton = overlayButton("중지", Color.rgb(158, 56, 56));
+        closeButton = overlayButton("끄기", Color.rgb(72, 78, 86));
 
-        settings.setOnClickListener(v -> {
+        settingsButton.setOnClickListener(v -> {
+            showButtonFeedback(settingsButton);
             Intent intent = new Intent(this, SettingsActivity.class);
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(intent);
         });
-        run.setOnClickListener(v -> {
+
+        runButton.setOnClickListener(v -> {
             String error = MacroScheduler.start(this);
-            Toast.makeText(this, error == null ? "넘기기를 시작했습니다." : error, Toast.LENGTH_SHORT).show();
+            if (error == null) {
+                setRunningUi(true);
+                Toast.makeText(this, "넘기기 실행 중", Toast.LENGTH_SHORT).show();
+            } else {
+                showButtonFeedback(runButton);
+                Toast.makeText(this, error, Toast.LENGTH_SHORT).show();
+            }
         });
-        stop.setOnClickListener(v -> {
+
+        stopButton.setOnClickListener(v -> {
             MacroScheduler.stop();
-            Toast.makeText(this, "넘기기를 중지했습니다.", Toast.LENGTH_SHORT).show();
+            setRunningUi(false);
+            Toast.makeText(this, "넘기기 중지됨", Toast.LENGTH_SHORT).show();
         });
 
-        panel.addView(settings, buttonLayout());
-        panel.addView(run, buttonLayout());
-        panel.addView(stop, buttonLayout());
+        closeButton.setOnClickListener(v -> {
+            showButtonFeedback(closeButton);
+            MacroScheduler.stop();
+            Toast.makeText(this, "고스트터치 UI를 닫았습니다.", Toast.LENGTH_SHORT).show();
+            stopSelf();
+        });
 
+        panel.addView(settingsButton, buttonLayout());
+        panel.addView(runButton, buttonLayout());
+        panel.addView(stopButton, buttonLayout());
+        panel.addView(closeButton, buttonLayout());
+
+        setRunningUi(MacroScheduler.isRunning());
         panel.setOnTouchListener(this::dragOverlay);
         return panel;
     }
@@ -103,7 +128,7 @@ public class GhostOverlayService extends Service {
                 PixelFormat.TRANSLUCENT
         );
         layoutParams.gravity = Gravity.TOP | Gravity.START;
-        layoutParams.x = dp(16);
+        layoutParams.x = dp(12);
         layoutParams.y = dp(96);
         return layoutParams;
     }
@@ -126,16 +151,63 @@ public class GhostOverlayService extends Service {
         }
     }
 
-    private Button overlayButton(String text) {
+    private Button overlayButton(String text, int normalColor) {
         Button button = new Button(this);
         button.setText(text);
         button.setAllCaps(false);
         button.setTextSize(13);
         button.setTextColor(Color.WHITE);
-        button.setMinWidth(dp(58));
+        button.setMinWidth(dp(54));
         button.setMinHeight(dp(42));
-        button.setBackgroundResource(R.drawable.bg_button_dark);
+        button.setPadding(dp(8), 0, dp(8), 0);
+        button.setBackground(buttonBackground(normalColor));
         return button;
+    }
+
+    private void setRunningUi(boolean running) {
+        if (runButton == null || stopButton == null) {
+            return;
+        }
+
+        if (running) {
+            runButton.setText("실행중");
+            runButton.setBackground(buttonBackground(Color.rgb(0, 194, 168)));
+            stopButton.setText("중지");
+            stopButton.setBackground(buttonBackground(Color.rgb(158, 56, 56)));
+        } else {
+            runButton.setText("실행");
+            runButton.setBackground(buttonBackground(Color.rgb(0, 137, 123)));
+            stopButton.setText("중지됨");
+            stopButton.setBackground(buttonBackground(Color.rgb(96, 72, 72)));
+        }
+    }
+
+    private void showButtonFeedback(Button button) {
+        button.setPressed(true);
+        button.postDelayed(() -> button.setPressed(false), 140);
+    }
+
+    private StateListDrawable buttonBackground(int normalColor) {
+        StateListDrawable states = new StateListDrawable();
+        states.addState(new int[]{android.R.attr.state_pressed}, roundedDrawable(lighten(normalColor), Color.WHITE));
+        states.addState(new int[]{android.R.attr.state_focused}, roundedDrawable(lighten(normalColor), Color.WHITE));
+        states.addState(new int[]{}, roundedDrawable(normalColor, Color.rgb(113, 130, 140)));
+        return states;
+    }
+
+    private GradientDrawable roundedDrawable(int fillColor, int strokeColor) {
+        GradientDrawable drawable = new GradientDrawable();
+        drawable.setColor(fillColor);
+        drawable.setStroke(dp(1), strokeColor);
+        drawable.setCornerRadius(dp(8));
+        return drawable;
+    }
+
+    private int lighten(int color) {
+        int red = Math.min(255, Color.red(color) + 44);
+        int green = Math.min(255, Color.green(color) + 44);
+        int blue = Math.min(255, Color.blue(color) + 44);
+        return Color.rgb(red, green, blue);
     }
 
     private LinearLayout.LayoutParams buttonLayout() {
