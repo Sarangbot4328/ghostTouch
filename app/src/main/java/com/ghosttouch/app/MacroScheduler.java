@@ -78,6 +78,16 @@ final class MacroScheduler {
             int swipePattern,
             Context appContext
     ) {
+        if (swipePattern == GhostTouchConfig.SWIPE_PATTERN_3) {
+            service.performStrongSwipeUp(() -> {
+                if (!isRunning()) {
+                    return;
+                }
+                service.performStrongSwipeUp(() -> scheduleAfterPattern(appContext));
+            });
+            return;
+        }
+
         if (swipePattern == GhostTouchConfig.SWIPE_PATTERN_2) {
             service.performSwipeRight(() -> {
                 if (!isRunning()) {

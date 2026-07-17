@@ -11,6 +11,7 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -21,11 +22,15 @@ public class SettingsActivity extends Activity {
     private RadioGroup swipePattern;
     private RadioButton pattern1;
     private RadioButton pattern2;
+    private RadioButton pattern3;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         GhostTouchConfig config = GhostTouchConfig.load(this);
+
+        ScrollView scrollView = new ScrollView(this);
+        scrollView.setBackgroundColor(Color.rgb(16, 24, 32));
 
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
@@ -53,9 +58,13 @@ public class SettingsActivity extends Activity {
         swipePattern.setOrientation(LinearLayout.VERTICAL);
         pattern1 = patternOption("패턴 1: 아래로 넘기기 1회 (기존 동작)");
         pattern2 = patternOption("패턴 2: 오른쪽 → 왼쪽 → 아래 순서로 넘기기");
+        pattern3 = patternOption("패턴 3: 강하게 아래로 넘기기 2회 연속");
         swipePattern.addView(pattern1, matchWrap());
         swipePattern.addView(pattern2, matchWrap());
-        if (config.swipePattern == GhostTouchConfig.SWIPE_PATTERN_2) {
+        swipePattern.addView(pattern3, matchWrap());
+        if (config.swipePattern == GhostTouchConfig.SWIPE_PATTERN_3) {
+            pattern3.setChecked(true);
+        } else if (config.swipePattern == GhostTouchConfig.SWIPE_PATTERN_2) {
             pattern2.setChecked(true);
         } else {
             pattern1.setChecked(true);
@@ -88,7 +97,8 @@ public class SettingsActivity extends Activity {
         save.setOnClickListener(v -> saveAndClose());
         root.addView(save, matchWrapWithTopMargin(24));
 
-        setContentView(root);
+        scrollView.addView(root);
+        setContentView(scrollView);
     }
 
     private void saveAndClose() {
@@ -104,9 +114,14 @@ public class SettingsActivity extends Activity {
             return;
         }
 
-        int selectedPattern = pattern2.isChecked()
-                ? GhostTouchConfig.SWIPE_PATTERN_2
-                : GhostTouchConfig.SWIPE_PATTERN_1;
+        int selectedPattern;
+        if (pattern3.isChecked()) {
+            selectedPattern = GhostTouchConfig.SWIPE_PATTERN_3;
+        } else if (pattern2.isChecked()) {
+            selectedPattern = GhostTouchConfig.SWIPE_PATTERN_2;
+        } else {
+            selectedPattern = GhostTouchConfig.SWIPE_PATTERN_1;
+        }
         GhostTouchConfig.save(this, swipeEnabled.isChecked(), min, max, selectedPattern);
         Toast.makeText(this, "설정을 저장했습니다.", Toast.LENGTH_SHORT).show();
         finish();

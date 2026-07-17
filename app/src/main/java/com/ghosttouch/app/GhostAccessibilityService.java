@@ -46,7 +46,16 @@ public class GhostAccessibilityService extends AccessibilityService {
         float startY = metrics.heightPixels * 0.76f;
         float endY = metrics.heightPixels * 0.24f;
 
-        performSwipe(x, startY, x, endY, onComplete);
+        performSwipe(x, startY, x, endY, 450, onComplete);
+    }
+
+    void performStrongSwipeUp(Runnable onComplete) {
+        DisplayMetrics metrics = getResources().getDisplayMetrics();
+        float x = metrics.widthPixels * 0.5f;
+        float startY = metrics.heightPixels * 0.88f;
+        float endY = metrics.heightPixels * 0.12f;
+
+        performSwipe(x, startY, x, endY, 300, onComplete);
     }
 
     void performSwipeRight(Runnable onComplete) {
@@ -55,7 +64,7 @@ public class GhostAccessibilityService extends AccessibilityService {
         float startX = metrics.widthPixels * 0.24f;
         float endX = metrics.widthPixels * 0.76f;
 
-        performSwipe(startX, y, endX, y, onComplete);
+        performSwipe(startX, y, endX, y, 450, onComplete);
     }
 
     void performSwipeLeft(Runnable onComplete) {
@@ -64,17 +73,24 @@ public class GhostAccessibilityService extends AccessibilityService {
         float startX = metrics.widthPixels * 0.76f;
         float endX = metrics.widthPixels * 0.24f;
 
-        performSwipe(startX, y, endX, y, onComplete);
+        performSwipe(startX, y, endX, y, 450, onComplete);
     }
 
-    private void performSwipe(float startX, float startY, float endX, float endY, Runnable onComplete) {
+    private void performSwipe(
+            float startX,
+            float startY,
+            float endX,
+            float endY,
+            long durationMillis,
+            Runnable onComplete
+    ) {
 
         Path path = new Path();
         path.moveTo(startX, startY);
         path.lineTo(endX, endY);
 
         GestureDescription gesture = new GestureDescription.Builder()
-                .addStroke(new GestureDescription.StrokeDescription(path, 0, 450))
+                .addStroke(new GestureDescription.StrokeDescription(path, 0, durationMillis))
                 .build();
 
         GestureResultCallback callback = new GestureResultCallback() {

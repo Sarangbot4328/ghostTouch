@@ -17,8 +17,7 @@ import android.widget.LinearLayout;
 import android.widget.Toast;
 
 public class GhostOverlayService extends Service {
-    private Button runButton;
-    private Button stopButton;
+    private Button runStopButton;
     private Button closeButton;
     private WindowManager windowManager;
     private View overlayView;
@@ -75,8 +74,7 @@ public class GhostOverlayService extends Service {
 
         Button settingsButton = overlayButton("설정", Color.rgb(44, 58, 68));
         Button moveButton = overlayButton("이동", Color.rgb(73, 88, 104));
-        runButton = overlayButton("실행", Color.rgb(0, 137, 123));
-        stopButton = overlayButton("중지", Color.rgb(158, 56, 56));
+        runStopButton = overlayButton("실행", Color.rgb(0, 137, 123));
         closeButton = overlayButton("끄기", Color.rgb(72, 78, 86));
 
         settingsButton.setOnClickListener(v -> {
@@ -89,21 +87,22 @@ public class GhostOverlayService extends Service {
         moveButton.setContentDescription("고스트터치 UI 이동");
         moveButton.setOnTouchListener(this::dragOverlay);
 
-        runButton.setOnClickListener(v -> {
+        runStopButton.setOnClickListener(v -> {
+            if (MacroScheduler.isRunning()) {
+                MacroScheduler.stop();
+                setRunningUi(false);
+                Toast.makeText(this, "넘기기 중지됨", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
             String error = MacroScheduler.start(this);
             if (error == null) {
                 setRunningUi(true);
                 Toast.makeText(this, "넘기기 실행 중", Toast.LENGTH_SHORT).show();
             } else {
-                showButtonFeedback(runButton);
+                showButtonFeedback(runStopButton);
                 Toast.makeText(this, error, Toast.LENGTH_SHORT).show();
             }
-        });
-
-        stopButton.setOnClickListener(v -> {
-            MacroScheduler.stop();
-            setRunningUi(false);
-            Toast.makeText(this, "넘기기 중지됨", Toast.LENGTH_SHORT).show();
         });
 
         closeButton.setOnClickListener(v -> {
@@ -114,9 +113,8 @@ public class GhostOverlayService extends Service {
         });
 
         panel.addView(settingsButton, buttonLayout());
+        panel.addView(runStopButton, buttonLayout());
         panel.addView(moveButton, buttonLayout());
-        panel.addView(runButton, buttonLayout());
-        panel.addView(stopButton, buttonLayout());
         panel.addView(closeButton, buttonLayout());
 
         setRunningUi(MacroScheduler.isRunning());
@@ -175,20 +173,16 @@ public class GhostOverlayService extends Service {
     }
 
     private void setRunningUi(boolean running) {
-        if (runButton == null || stopButton == null) {
+        if (runStopButton == null) {
             return;
         }
 
         if (running) {
-            runButton.setText("실행중");
-            runButton.setBackground(buttonBackground(Color.rgb(0, 194, 168)));
-            stopButton.setText("중지");
-            stopButton.setBackground(buttonBackground(Color.rgb(158, 56, 56)));
+            runStopButton.setText("중지");
+            runStopButton.setBackground(buttonBackground(Color.rgb(158, 56, 56)));
         } else {
-            runButton.setText("실행");
-            runButton.setBackground(buttonBackground(Color.rgb(0, 137, 123)));
-            stopButton.setText("중지됨");
-            stopButton.setBackground(buttonBackground(Color.rgb(96, 72, 72)));
+            runStopButton.setText("실행");
+            runStopButton.setBackground(buttonBackground(Color.rgb(0, 137, 123)));
         }
     }
 

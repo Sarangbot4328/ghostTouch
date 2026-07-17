@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 final class GhostTouchConfig {
     static final int SWIPE_PATTERN_1 = 1;
     static final int SWIPE_PATTERN_2 = 2;
+    static final int SWIPE_PATTERN_3 = 3;
 
     static final String PREFS_NAME = "ghost_touch_settings";
     private static final String KEY_SWIPE_ENABLED = "swipe_enabled";
@@ -36,7 +37,9 @@ final class GhostTouchConfig {
             maxSeconds = minSeconds;
         }
         int swipePattern = prefs.getInt(KEY_SWIPE_PATTERN, SWIPE_PATTERN_1);
-        if (swipePattern != SWIPE_PATTERN_1 && swipePattern != SWIPE_PATTERN_2) {
+        if (swipePattern != SWIPE_PATTERN_1
+                && swipePattern != SWIPE_PATTERN_2
+                && swipePattern != SWIPE_PATTERN_3) {
             swipePattern = SWIPE_PATTERN_1;
         }
         return new GhostTouchConfig(
