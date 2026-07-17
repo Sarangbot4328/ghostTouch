@@ -7,3 +7,7 @@ app/build/
 captures/
 *.apk
 *.aab
+.signing-private/
+*.jks
+*.keystore
+*.p12

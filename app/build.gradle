@@ -2,6 +2,13 @@ plugins {
     id "com.android.application"
 }
 
+def githubRunNumber = System.getenv("GITHUB_RUN_NUMBER")
+def signingStoreFile = System.getenv("ANDROID_SIGNING_STORE_FILE")
+def signingStorePassword = System.getenv("ANDROID_SIGNING_STORE_PASSWORD")
+def signingKeyAlias = System.getenv("ANDROID_SIGNING_KEY_ALIAS")
+def signingKeyPassword = System.getenv("ANDROID_SIGNING_KEY_PASSWORD")
+def hasCiSigning = signingStoreFile && signingStorePassword && signingKeyAlias && signingKeyPassword
+
 android {
     namespace "com.ghosttouch.app"
     compileSdk 35
@@ -10,8 +17,33 @@ android {
         applicationId "com.ghosttouch.app"
         minSdk 26
         targetSdk 35
-        versionCode 1
-        versionName "0.1.0"
+        versionCode githubRunNumber ? 1000 + githubRunNumber.toInteger() : 2
+        versionName githubRunNumber ? "0.2.${githubRunNumber}" : "0.2.0"
+    }
+
+    signingConfigs {
+        if (hasCiSigning) {
+            ci {
+                storeFile file(signingStoreFile)
+                storePassword signingStorePassword
+                keyAlias signingKeyAlias
+                keyPassword signingKeyPassword
+                storeType "PKCS12"
+            }
+        }
+    }
+
+    buildTypes {
+        debug {
+            if (hasCiSigning) {
+                signingConfig signingConfigs.ci
+            }
+        }
+        release {
+            if (hasCiSigning) {
+                signingConfig signingConfigs.ci
+            }
+        }
     }
 
     compileOptions {

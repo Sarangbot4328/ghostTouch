@@ -64,7 +64,10 @@ public class MainActivity extends Activity {
         GhostTouchConfig config = GhostTouchConfig.load(this);
         overlayStatus.setText("오버레이 권한: " + (Settings.canDrawOverlays(this) ? "허용됨" : "필요함"));
         accessibilityStatus.setText("접근성 서비스: " + (GhostAccessibilityService.isReady() ? "켜짐" : "꺼짐"));
-        featureStatus.setText("넘기기: " + (config.swipeEnabled ? "사용, " + config.minSeconds + "~" + config.maxSeconds + "초" : "꺼짐"));
+        String patternName = config.swipePattern == GhostTouchConfig.SWIPE_PATTERN_2 ? "패턴 2" : "패턴 1";
+        featureStatus.setText("넘기기: " + (config.swipeEnabled
+                ? "사용, " + patternName + ", " + config.minSeconds + "~" + config.maxSeconds + "초"
+                : "꺼짐"));
     }
 
     private void openOverlaySettings() {

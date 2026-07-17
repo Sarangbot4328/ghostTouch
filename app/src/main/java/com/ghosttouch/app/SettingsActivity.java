@@ -9,6 +9,8 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -16,6 +18,9 @@ public class SettingsActivity extends Activity {
     private CheckBox swipeEnabled;
     private EditText minSeconds;
     private EditText maxSeconds;
+    private RadioGroup swipePattern;
+    private RadioButton pattern1;
+    private RadioButton pattern2;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,6 +45,22 @@ public class SettingsActivity extends Activity {
         swipeEnabled.setTextColor(Color.WHITE);
         swipeEnabled.setChecked(config.swipeEnabled);
         root.addView(swipeEnabled, matchWrapWithTopMargin(22));
+
+        TextView patternLabel = label("넘기기 패턴");
+        root.addView(patternLabel, matchWrapWithTopMargin(18));
+
+        swipePattern = new RadioGroup(this);
+        swipePattern.setOrientation(LinearLayout.VERTICAL);
+        pattern1 = patternOption("패턴 1: 아래로 넘기기 1회 (기존 동작)");
+        pattern2 = patternOption("패턴 2: 오른쪽 → 왼쪽 → 아래 순서로 넘기기");
+        swipePattern.addView(pattern1, matchWrap());
+        swipePattern.addView(pattern2, matchWrap());
+        if (config.swipePattern == GhostTouchConfig.SWIPE_PATTERN_2) {
+            pattern2.setChecked(true);
+        } else {
+            pattern1.setChecked(true);
+        }
+        root.addView(swipePattern, matchWrapWithTopMargin(6));
 
         TextView rangeLabel = label("랜덤 실행 시간");
         root.addView(rangeLabel, matchWrapWithTopMargin(18));
@@ -83,7 +104,10 @@ public class SettingsActivity extends Activity {
             return;
         }
 
-        GhostTouchConfig.save(this, swipeEnabled.isChecked(), min, max);
+        int selectedPattern = pattern2.isChecked()
+                ? GhostTouchConfig.SWIPE_PATTERN_2
+                : GhostTouchConfig.SWIPE_PATTERN_1;
+        GhostTouchConfig.save(this, swipeEnabled.isChecked(), min, max, selectedPattern);
         Toast.makeText(this, "설정을 저장했습니다.", Toast.LENGTH_SHORT).show();
         finish();
     }
@@ -117,6 +141,15 @@ public class SettingsActivity extends Activity {
         input.setHintTextColor(Color.rgb(182, 194, 201));
         input.setInputType(InputType.TYPE_CLASS_NUMBER);
         return input;
+    }
+
+    private RadioButton patternOption(String value) {
+        RadioButton option = new RadioButton(this);
+        option.setText(value);
+        option.setTextSize(16);
+        option.setTextColor(Color.WHITE);
+        option.setPadding(0, dp(4), 0, dp(4));
+        return option;
     }
 
     private LinearLayout.LayoutParams matchWrap() {

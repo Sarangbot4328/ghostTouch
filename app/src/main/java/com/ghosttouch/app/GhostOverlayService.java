@@ -74,6 +74,7 @@ public class GhostOverlayService extends Service {
         panel.setBackground(background);
 
         Button settingsButton = overlayButton("설정", Color.rgb(44, 58, 68));
+        Button moveButton = overlayButton("이동", Color.rgb(73, 88, 104));
         runButton = overlayButton("실행", Color.rgb(0, 137, 123));
         stopButton = overlayButton("중지", Color.rgb(158, 56, 56));
         closeButton = overlayButton("끄기", Color.rgb(72, 78, 86));
@@ -84,6 +85,9 @@ public class GhostOverlayService extends Service {
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(intent);
         });
+
+        moveButton.setContentDescription("고스트터치 UI 이동");
+        moveButton.setOnTouchListener(this::dragOverlay);
 
         runButton.setOnClickListener(v -> {
             String error = MacroScheduler.start(this);
@@ -110,6 +114,7 @@ public class GhostOverlayService extends Service {
         });
 
         panel.addView(settingsButton, buttonLayout());
+        panel.addView(moveButton, buttonLayout());
         panel.addView(runButton, buttonLayout());
         panel.addView(stopButton, buttonLayout());
         panel.addView(closeButton, buttonLayout());
@@ -136,6 +141,7 @@ public class GhostOverlayService extends Service {
     private boolean dragOverlay(View view, MotionEvent event) {
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
+                view.setPressed(true);
                 initialX = params.x;
                 initialY = params.y;
                 initialTouchX = event.getRawX();
@@ -145,6 +151,10 @@ public class GhostOverlayService extends Service {
                 params.x = initialX + Math.round(event.getRawX() - initialTouchX);
                 params.y = initialY + Math.round(event.getRawY() - initialTouchY);
                 windowManager.updateViewLayout(overlayView, params);
+                return true;
+            case MotionEvent.ACTION_UP:
+            case MotionEvent.ACTION_CANCEL:
+                view.setPressed(false);
                 return true;
             default:
                 return false;

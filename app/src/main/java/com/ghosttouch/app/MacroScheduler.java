@@ -67,14 +67,38 @@ final class MacroScheduler {
                 return;
             }
 
-            service.performSwipeUp();
-
-            synchronized (MacroScheduler.class) {
-                if (running) {
-                    scheduleNext(appContext);
-                }
-            }
+            GhostTouchConfig latestConfig = GhostTouchConfig.load(appContext);
+            performPattern(service, latestConfig.swipePattern, appContext);
         };
         HANDLER.postDelayed(scheduledTask, nextSeconds * 1000L);
+    }
+
+    private static void performPattern(
+            GhostAccessibilityService service,
+            int swipePattern,
+            Context appContext
+    ) {
+        if (swipePattern == GhostTouchConfig.SWIPE_PATTERN_2) {
+            service.performSwipeRight(() -> {
+                if (!isRunning()) {
+                    return;
+                }
+                service.performSwipeLeft(() -> {
+                    if (!isRunning()) {
+                        return;
+                    }
+                    service.performSwipeUp(() -> scheduleAfterPattern(appContext));
+                });
+            });
+            return;
+        }
+
+        service.performSwipeUp(() -> scheduleAfterPattern(appContext));
+    }
+
+    private static synchronized void scheduleAfterPattern(Context appContext) {
+        if (running) {
+            scheduleNext(appContext);
+        }
     }
 }
