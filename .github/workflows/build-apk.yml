@@ -45,11 +45,27 @@ jobs:
           SIGNING_KEYSTORE_BASE64: ${{ secrets.ANDROID_SIGNING_KEYSTORE_BASE64 }}
         run: printf '%s' "$SIGNING_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/ghosttouch-signing.p12"
 
+      - name: Detect signing key alias
+        env:
+          SIGNING_PASSWORD: ${{ secrets.ANDROID_SIGNING_PASSWORD }}
+        run: |
+          keytool_output="$(LC_ALL=C keytool -list -v \
+            -keystore "$RUNNER_TEMP/ghosttouch-signing.p12" \
+            -storetype PKCS12 \
+            -storepass "$SIGNING_PASSWORD")"
+          signing_alias="$(printf '%s\n' "$keytool_output" | awk -F': ' '/^Alias name: / { print $2; exit }')"
+
+          if [ -z "$signing_alias" ]; then
+            echo "Could not detect the signing key alias."
+            exit 1
+          fi
+
+          echo "ANDROID_SIGNING_KEY_ALIAS=$signing_alias" >> "$GITHUB_ENV"
+
       - name: Build debug APK
         env:
           ANDROID_SIGNING_STORE_FILE: ${{ runner.temp }}/ghosttouch-signing.p12
           ANDROID_SIGNING_STORE_PASSWORD: ${{ secrets.ANDROID_SIGNING_PASSWORD }}
-          ANDROID_SIGNING_KEY_ALIAS: ghosttouch
           ANDROID_SIGNING_KEY_PASSWORD: ${{ secrets.ANDROID_SIGNING_PASSWORD }}
         run: gradle assembleDebug --no-daemon
 
