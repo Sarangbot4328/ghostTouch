@@ -65,7 +65,9 @@ public class MainActivity extends Activity {
         overlayStatus.setText("오버레이 권한: " + (Settings.canDrawOverlays(this) ? "허용됨" : "필요함"));
         accessibilityStatus.setText("접근성 서비스: " + (GhostAccessibilityService.isReady() ? "켜짐" : "꺼짐"));
         String patternName;
-        if (config.swipePattern == GhostTouchConfig.SWIPE_PATTERN_3) {
+        if (config.swipePattern == GhostTouchConfig.SWIPE_PATTERN_4) {
+            patternName = "패턴 4";
+        } else if (config.swipePattern == GhostTouchConfig.SWIPE_PATTERN_3) {
             patternName = "패턴 3";
         } else if (config.swipePattern == GhostTouchConfig.SWIPE_PATTERN_2) {
             patternName = "패턴 2";

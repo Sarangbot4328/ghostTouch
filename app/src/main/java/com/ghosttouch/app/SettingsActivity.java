@@ -23,6 +23,7 @@ public class SettingsActivity extends Activity {
     private RadioButton pattern1;
     private RadioButton pattern2;
     private RadioButton pattern3;
+    private RadioButton pattern4;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,10 +60,14 @@ public class SettingsActivity extends Activity {
         pattern1 = patternOption("패턴 1: 아래로 넘기기 1회 (기존 동작)");
         pattern2 = patternOption("패턴 2: 오른쪽 → 왼쪽 → 아래 순서로 넘기기");
         pattern3 = patternOption("패턴 3: 강하게 아래로 넘기기 2회 연속");
+        pattern4 = patternOption("패턴 4: 1·2·3 랜덤 혼합 + 4~5회마다 30초 대기");
         swipePattern.addView(pattern1, matchWrap());
         swipePattern.addView(pattern2, matchWrap());
         swipePattern.addView(pattern3, matchWrap());
-        if (config.swipePattern == GhostTouchConfig.SWIPE_PATTERN_3) {
+        swipePattern.addView(pattern4, matchWrap());
+        if (config.swipePattern == GhostTouchConfig.SWIPE_PATTERN_4) {
+            pattern4.setChecked(true);
+        } else if (config.swipePattern == GhostTouchConfig.SWIPE_PATTERN_3) {
             pattern3.setChecked(true);
         } else if (config.swipePattern == GhostTouchConfig.SWIPE_PATTERN_2) {
             pattern2.setChecked(true);
@@ -115,7 +120,9 @@ public class SettingsActivity extends Activity {
         }
 
         int selectedPattern;
-        if (pattern3.isChecked()) {
+        if (pattern4.isChecked()) {
+            selectedPattern = GhostTouchConfig.SWIPE_PATTERN_4;
+        } else if (pattern3.isChecked()) {
             selectedPattern = GhostTouchConfig.SWIPE_PATTERN_3;
         } else if (pattern2.isChecked()) {
             selectedPattern = GhostTouchConfig.SWIPE_PATTERN_2;
